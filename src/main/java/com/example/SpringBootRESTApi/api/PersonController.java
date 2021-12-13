@@ -26,11 +26,15 @@ public class PersonController {
 
     PersonService personService;
 
+
     @PostMapping(path = "/post", produces = MediaType.APPLICATION_JSON_VALUE)      //indicates that a function processes a POST request.
     @ResponseBody()
     public ResponseEntity addPerson(@Valid @NonNull @RequestBody Person personToAdd) throws JsonProcessingException {
 
-        if(personToAdd.equals(personToAdd)){
+        boolean doesPersonNotExistResult = personService.checkIfPersonObjectDoesNotExistsInDatabase(personToAdd);
+
+        if(doesPersonNotExistResult == false){
+
             ReturnMessage returnMessage = new ReturnMessage();
             returnMessage.setReturnMessage("This person already exists.");
             ObjectWriter javaObjectScanner_turnsJavaIntoJSON = new ObjectMapper().writer().withDefaultPrettyPrinter();
@@ -57,11 +61,12 @@ public class PersonController {
         return ResponseEntity.status(HttpStatus.OK).body(json);
     }
 
-    //Todo: Review logic. Want to search Id and it return the name
+
     @GetMapping(path = "/id", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody()
-    public ResponseEntity getPersonById(@RequestBody Person personIdToFind) throws JsonProcessingException {       //@PathVariable
-        String foundPersonEntityById = personService.selectPersonById(personIdToFind);
+    public ResponseEntity getPersonById(@RequestParam(name = "idToSearchWith") String idToSearchWith) throws JsonProcessingException {
+        System.out.println("endpoint was hit!!!");//@PathVariable
+        String foundPersonEntityById = personService.selectPersonById(idToSearchWith);
         ReturnMessage returnMessage = new ReturnMessage();
         returnMessage.setReturnMessage("Retrieved information: " + foundPersonEntityById);
         ObjectWriter javaObjectScanner_turnsJavaIntoJSON = new ObjectMapper().writer().withDefaultPrettyPrinter();
@@ -72,9 +77,9 @@ public class PersonController {
 
     @DeleteMapping (path = "/delete", produces = MediaType.APPLICATION_JSON_VALUE  )//indicates that a function processes a DELETE request.
     @ResponseBody()//Lets java know we want to return something to the client
-    public ResponseEntity deletePersonById(@RequestBody Person personToDelete) throws JsonProcessingException {
+    public ResponseEntity deletePersonById(@RequestParam(name = "idToDeleteWith")String idToDeleteWith) throws JsonProcessingException {
 
-         if (personToDelete.getId() < 2) {
+         if (idToDeleteWith.equals("2")) {
              ReturnMessage returnMessage = new ReturnMessage();
              returnMessage.setReturnMessage("Need more privileges to delete this account");
              //turns java into object into json
@@ -82,10 +87,10 @@ public class PersonController {
              String json = javaObjectScanner_turnsJavaIntoJSON.writeValueAsString(returnMessage);
              return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);   //Customising the feed back we get from postman. Was originally 200 okay but it cant be because we didnt delete the value of one because we restricted uit earlier.
          }
-         personService.deletePersonById(personToDelete);
+         personService.deletePersonById(idToDeleteWith);
          //Return a msg
          ReturnMessage returnMessage = new ReturnMessage();
-         returnMessage.setReturnMessage("deleted object with id : " + personToDelete.getId());
+         returnMessage.setReturnMessage("Deleted Person With ID : " + idToDeleteWith);
         //Converts java msg back to client into an object then into json
          ObjectWriter javaObjectScanner_turnsJavaIntoJSON = new ObjectMapper().writer().withDefaultPrettyPrinter(); //JSON WRITER
          String json = javaObjectScanner_turnsJavaIntoJSON.writeValueAsString(returnMessage);
@@ -95,7 +100,7 @@ public class PersonController {
     @PatchMapping  (path = "/update", produces = MediaType.APPLICATION_JSON_VALUE)    //indicates that a function processes a PUT request.
     @ResponseBody()
     public ResponseEntity updatePersonById(@Valid @NonNull @RequestBody Person personToUpdate) throws JsonProcessingException {
-        if(personToUpdate.getId() < 2){
+        if(personToUpdate.getId() < 1){
             ReturnMessage returnMessage = new ReturnMessage();
             returnMessage.setReturnMessage("This person cannot be updated");
             ObjectWriter javaObjectScanner_turnsJavaIntoJSON = new ObjectMapper().writer().withDefaultPrettyPrinter();

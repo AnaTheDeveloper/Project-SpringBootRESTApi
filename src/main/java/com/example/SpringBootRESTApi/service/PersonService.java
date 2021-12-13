@@ -15,15 +15,14 @@ public class PersonService {
 
     private PersonRepository personRepository;
 
-    public void addPerson(Person person){
+    public void addPerson(@Valid Person personToUpdate){
 
-        personRepository.save(person);
+        personRepository.save(personToUpdate);
     }
 
 
     public String selectAllPeople(){
         List<Person> listOfEveryPersonEntityInDatabase = personRepository.findAll();
-        //todo: comeback to see if casting works.
 
         StringBuilder everyPersonInDatabaseAsString = new StringBuilder();
 
@@ -32,9 +31,9 @@ public class PersonService {
         return everyPersonInDatabaseAsString.toString();
     }
 
-    public String selectPersonById(Person person){
-
-        Optional<Person> personFoundById = personRepository.findById(person.getId());
+    public String selectPersonById(String idToSearchWith){
+        Integer idToSearch = Integer.valueOf(idToSearchWith);
+        Optional<Person> personFoundById = personRepository.findById(idToSearch);
 
         if (personFoundById.isPresent() == false) {
            return "ERROR! PERSON NOT FOUND";
@@ -44,13 +43,37 @@ public class PersonService {
         return personFoundInDatabase.toString();
     }
 
-    public void deletePersonById(Person person){
+    public String deletePersonById(String idToDeleteWith){
 
-        personRepository.deleteById(person.getId());
+        Integer idToSearch = Integer.valueOf(idToDeleteWith);
+        Optional<Person> personFoundById = personRepository.findById(idToSearch);
+
+        if (personFoundById.isPresent() == false) {
+            return "ERROR! PERSON NOT FOUND";
+        }
+
+        Person personFoundInDatabase = personFoundById.get();
+        personRepository.delete(personFoundInDatabase);
+
+        return "Person Deleted";
+
     }
 
     public void updatePersonById(@Valid Person personToUpdate){
+
         personRepository.save(personToUpdate);
+    }
+
+    public boolean checkIfPersonObjectDoesNotExistsInDatabase(Person person) {
+        Optional<Person> personObject_mightBeEmpty = personRepository.findById((person.getId()));
+
+        if (personObject_mightBeEmpty.isEmpty()) {
+            return true;
+        } else {
+            return false;
+        }
+
+
     }
 
 }
